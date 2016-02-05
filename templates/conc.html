@@ -1,23 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
 {% if conc is defined %}
-<div class="container-large" role="main">
+<div id="conc" class="container-large" role="main">
   <div class="panel panel-default">
     <div class="panel-heading">
-      <p class="align-left">
+      <div class="align-left">
         {% include "pager.html" %}
-      </p>
-      <p class="align-right">
+      </div>
+      <div class="align-right">
         <span class="label label-default">absolute frequency</span>
         {{ "{:,d}".format(freq.abs) }}
         <span class="label label-primary">i.p.m.</span>
         {{ "{:0,.2f}".format(freq.ipm) }}
         <span class="label label-success">ARF</span>
         {{ "{:0,.2f}".format(freq.arf) }}
-      </p>
-      <p id="hint">
-        <small>Press <kbd>Ctrl+Enter</kbd> with cursor anywhere in page to search.</small>
-      </p>
+      </div>
+      <small id="hint">Press <kbd>Ctrl+Enter</kbd> with cursor anywhere in page to search.</small>
     </div>
     <div style="overflow-x: auto;">
       <table class="table table-hover table-condensed text-nowrap">
