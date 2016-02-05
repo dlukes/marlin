@@ -261,17 +261,25 @@ def conc(corpus, cql , page):
         right = as_unicode(kwic_lines.get_right(), enc)
         result.append((meta, left, kwic, right))
         i += 1
-    return render_template("conc.html", form=form, conc=result,
     return render_template("conc.html", forms=forms, conc=result,
                            freq=freq_info(corpus, conc), def_corp=corpus.name,
                            pager=pager(conc, per_page, page))
 
 
-@app.route("/freq/<by>/<corpus>/<cql>")
-def freq(by, corpus, cql):
-    form = QueryForm(corpus=corpus, cql=cql)
-    how = "{}/ 0<0".format(by)
-    words = manatee.StrVector()
+def freq_dist_ipms(items, freqs, norms, corpsize):
+    def _ipm(item, freq):
+        if type(norms) == dict:
+            return freq / norms[item] * 1e6
+        else:
+            return freq / corpsize * 1e6
+    return [_ipm(item, freq) for (item, freq) in izip(items, freqs)]
+
+
+@app.route("/freq/<corpus>/<cql>/<by>/<int:offset>/<int:minfreq>")
+def freq(corpus, cql, by, offset, minfreq):
+    forms = create_forms(locals())
+    how = "{}/ {}<{}".format(by, offset, minfreq)
+    items = manatee.StrVector()
     freqs = manatee.NumVector()
     norms = manatee.NumVector()
     try:
@@ -279,9 +287,20 @@ def freq(by, corpus, cql):
     except manatee.CorpInfoNotFound:
         abort(404, "Invalid corpus name.")
     conc = corpus.query(cql)
-    corpus.freq_dist(conc.RS(), how, 0, words, freqs, norms)
-    words = map(lambda x: x.decode(corpus.enc), words)
-    return render_template("freq.html", form=form, rows=zip(words, freqs))
+    corpus.freq_dist(conc.RS(), how, 0, items, freqs, norms)
+    items = map(lambda x: x.decode(corpus.enc), items)
+    # throw away manatee's norms if computed, like KonText does (what do they
+    # mean anyway??)
+    if sum(norms) > 0:
+        norms = corpus.toks_per_attrval(by)
+    ipms = freq_dist_ipms(items, freqs, norms, corpus.size())
+    rows = zip(items, freqs, ipms)
+    # if the freq dist is long, take only the first 10000 items (the rest are
+    # useless anyway); TODO: notify user of this
+    rows = rows[:1e4] if len(rows) > 1e4 else rows
+    return render_template("freq.html", forms=forms, def_corp=corpus.name,
+                           rows=rows, abs_max=max(freqs),
+                           ipm_max=max(ipms))
 
 
 if __name__ == "__main__":
