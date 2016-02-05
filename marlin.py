@@ -131,6 +131,23 @@ class Corpus(object):
         conc.save(cache_path, False, False, False)
         return conc
 
+    def toks_per_attrval(self, struct_attr):
+        struct, attr = struct_attr.split(".")
+        struct = self.get_struct(struct)
+        attr = struct.get_attr(attr)
+        struct_len_at_pos = {
+            struct.beg(i): struct.end(i) - struct.beg(i) for i in range(struct.size())}
+        ans = {}
+        for attrid in range(attr.id_range()):
+            attrval = attr.id2str(attrid)
+            rs = self.filter_query(struct.attr_val(attr.name, attrid))
+            length = 0
+            while not rs.end():
+                length += struct_len_at_pos[rs.peek_beg()]
+                rs.next()
+            ans[attrval.decode(self.enc)] = length
+        return ans
+
 
 class Concordance(object):
     """A wrapper for manatee concordances.
