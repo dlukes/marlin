@@ -7,6 +7,21 @@ function makeConc() {
   Turbolinks.visit(url);
 }
 
+function makeFreqDist() {
+  var corpus = $('#corpus').val();
+  var cql = $('#cql').val();
+  var by = $('#by').val();
+  var offset = $('#offset').val();
+  var minfreq = $('#minfreq').val();
+  var url = '/freq/' +
+        encodeURIComponent(corpus) + '/' +
+        encodeURIComponent(cql) + '/' +
+        encodeURIComponent(by) + '/' +
+        encodeURIComponent(offset) + '/' +
+        encodeURIComponent(minfreq);
+  Turbolinks.visit(url);
+}
+
 $(document).ready(function() {
   $(document).keydown(function(e) {
     if (e.ctrlKey && e.keyCode == 13) {
