@@ -29,10 +29,6 @@ textarea {
   resize: vertical;
 }
 
-.panel-heading {
-  padding-bottom: 0;
-}
-
 #logo {
   height: 50px;
   float: left;
@@ -78,4 +74,13 @@ textarea {
   margin-top: 0;
   margin-right: 0;
   margin-left: 15px;
+}
+
+.progress {
+  height: 10px;
+}
+
+#freq-dist th:nth-child(3),
+#freq-dist th:nth-child(5) {
+  width: 100px;
 }
