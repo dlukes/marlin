@@ -53,12 +53,60 @@
     </div>
   </nav>
   <div id="option-menu" class="navmenu navmenu-default navmenu-fixed-right offcanvas">
-    <span class="navmenu-brand">Options</span>
-    <ul class="nav navmenu-nav">
-      <li><a href="#">Home</a></li>
-      <li><a href="#">Link</a></li>
-      <li><a href="#">Link</a></li>
-    </ul>
+    <span class="navmenu-brand">Menu</span>
+    <div class="panel-group" id="menu-accordion">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" data-parent="#menu-accordion" href="#freq-dist-menu" class="btn-block">Frequency distribution</a>
+          </h4>
+        </div>
+        <div id="freq-dist-menu" class="panel-collapse collapse in">
+          <div class="panel-body">
+            <form>
+              <div class="form-group">
+                {{ forms.freq_dist.by.label }}{{ forms.freq_dist.by(class_="form-control") }}
+                {{ forms.freq_dist.offset.label }}{{ forms.freq_dist.offset(class_="form-control") }}
+                {{ forms.freq_dist.minfreq.label }}{{ forms.freq_dist.minfreq(class_="form-control") }}
+              </div>
+              <div class="form-group">
+                <button type="submit" onclick="makeFreqDist()" class="btn btn-md btn-primary form-control">Go</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" data-parent="#menu-accordion" href="#colloc-menu" class="btn-block">Collocations</a>
+          </h4>
+        </div>
+        <div id="colloc-menu" class="panel-collapse collapse">
+          <div class="panel-body">Lorem ipsum dolor sit amet,
+            consectetur adipisicing elit,
+            sed do eiusmod tempor incididunt ut labore et
+            dolore magna aliqua. Ut enim ad minim veniam,
+            quis nostrud exercitation ullamco laboris nisi
+            ut aliquip ex ea commodo consequat.</div>
+        </div>
+      </div>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" data-parent="#menu-accordion" href="#view-menu" class="btn-block">View options</a>
+          </h4>
+        </div>
+        <div id="view-menu" class="panel-collapse collapse">
+          <div class="panel-body">Lorem ipsum dolor sit amet,
+            consectetur adipisicing elit,
+            sed do eiusmod tempor incididunt ut labore et
+            dolore magna aliqua. Ut enim ad minim veniam,
+            quis nostrud exercitation ullamco laboris nisi
+            ut aliquip ex ea commodo consequat.</div>
+        </div>
+      </div>
+    </div>
   </div>
   {% block content %}
   {% endblock %}
