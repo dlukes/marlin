@@ -4,11 +4,12 @@ from __future__ import division
 import os
 import sys
 import hashlib
+from itertools import izip
 
 from flask import Flask, abort, render_template
 from flask_turbolinks import turbolinks
 from flask_wtf import Form
-from wtforms import SelectField, TextAreaField
+from wtforms import IntegerField, SelectField, StringField, TextAreaField
 import wtforms.validators as validators
 
 import re
@@ -168,14 +169,39 @@ class CachedConcordance(Concordance):
 
 class QueryForm(Form):
     corpora = app.config["CORPORA"]
+    # watch out, choices need to be zipped, not izipped, because they're
+    # consumed each time a form is created, and a generator remains empty once
+    # spent
     corpus = SelectField(u"Corpus name", [validators.required()],
                          choices=zip(corpora, corpora))
     cql = TextAreaField(u"CQL query", [validators.required()])
 
 
+class FreqDistForm(Form):
+    by = StringField(u"Grouping attribute", [validators.required()])
+    # default="word")
+    offset = IntegerField(u"Offset from KWIC", [validators.required()])
+    # default=0)
+    minfreq = IntegerField(u"Minimum frequency", [validators.required()])
+    # default=0)
+
+
+def create_forms(kwargs):
+    forms = {}
+    forms["query"] = QueryForm(
+        corpus=kwargs.get("corpus"), cql=kwargs.get("cql"))
+    app.logger.debug(kwargs)
+    forms["def_corp"] = kwargs.get("corpus", app.config["DEFAULT_CORPUS"])
+    app.logger.debug(forms["def_corp"])
+    forms["freq_dist"] = FreqDistForm(
+        by=kwargs.get("by", "word"), offset=kwargs.get("offset", 0),
+        minfreq=kwargs.get("minfreq", 0))
+    return forms
+
+
 def freq_info(corpus, conc):
     abs = conc.size()
-    ipm = abs / corpus.size() * 10**6
+    ipm = abs / corpus.size() * 1e6
     arf = conc.compute_ARF()
     return locals()
 
@@ -200,6 +226,8 @@ def conc(corpus, cql, page):
     # GET only the query form
     if corpus == "" and cql == "":
         return render_template("conc.html", form=form, def_corp=app.config["DEFAULT_CORPUS"])
+def conc(corpus, cql , page):
+    forms = create_forms(locals())
     try:
         corpus = Corpus(corpus)
     except manatee.CorpInfoNotFound:
@@ -219,6 +247,7 @@ def conc(corpus, cql, page):
         result.append((meta, left, kwic, right))
         i += 1
     return render_template("conc.html", form=form, conc=result,
+    return render_template("conc.html", forms=forms, conc=result,
                            freq=freq_info(corpus, conc), def_corp=corpus.name,
                            pager=pager(conc, per_page, page))
 
