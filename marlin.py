@@ -241,7 +241,7 @@ def index():
 
 
 @app.route("/conc/<corpus>/<cql>/<int:page>")
-def conc(corpus, cql , page):
+def conc(corpus, cql, page):
     forms = create_forms(locals())
     try:
         corpus = Corpus(corpus)
