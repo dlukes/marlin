@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<table>
+  <thead>
+    <tr>
+      <td>item</td>
+      <td>freq</td>
+    </tr>
+  </thead>
+  <tbody>
+    {% for word, freq in rows %}
+    <tr>
+      <td>{{ word }}</td>
+      <td>{{ freq }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

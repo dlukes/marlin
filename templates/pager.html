@@ -1,0 +1,8 @@
+{% if pager.prev is not none %}
+<a class="btn btn-xs btn-info" href="/conc/{{ form.corpus.data | urlencode }}/{{ form.cql.data | urlencode }}/{{ pager.prev }}">« prev 50</a>
+{% endif %}
+{% if pager.prev is not none and pager.next is not none %}
+{% endif %}
+{% if pager.next is not none %}
+<a class="btn btn-xs btn-info" href="/conc/{{ form.corpus.data | urlencode }}/{{ form.cql.data | urlencode }}/{{ pager.next }}">next 50 »</a>
+{% endif %}

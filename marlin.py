@@ -1,0 +1,244 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
+
+import os
+import sys
+import hashlib
+
+from flask import Flask, abort, render_template
+from flask_turbolinks import turbolinks
+from flask_wtf import Form
+from wtforms import SelectField, TextAreaField
+import wtforms.validators as validators
+
+import re
+# this is valid for the trost server
+sys.path.append("/opt/manatee/2.107.1/lib/python2.7/site-packages/")
+import manatee
+
+app = Flask("marlin")
+
+# CONFIG
+app.config.update(
+    SECRET_KEY="a random string",
+    DEFAULT_CORPUS="syn2015",
+    CACHE_DIR=os.path.abspath(".cache"),
+    MANATEE_REGISTRY="/home/manatee/registry")
+app = turbolinks(app)
+os.environ["MANATEE_REGISTRY"] = app.config["MANATEE_REGISTRY"]
+
+
+def find_corpora(registry):
+    corpora = set()
+    for dirpath, _, filenames in os.walk(registry):
+        for name in filenames:
+            with open(os.path.join(dirpath, name)) as fh:
+                try:
+                    line = fh.readline().strip()
+                    prop, _ = re.split(r"\s+", line, 1)
+                # split unsuccessful
+                except ValueError:
+                    next
+            if prop == "NAME":
+                # corpora.add(val.strip('"'))
+                corpora.add(name)
+    return sorted(corpora)
+
+
+app.config["CORPORA"] = find_corpora(app.config["MANATEE_REGISTRY"])
+
+
+class Corpus(object):
+    """A wrapper for manatee corpora.
+
+    """
+    def __init__(self, corpname):
+        self._corpus = manatee.Corpus(corpname)
+        self.enc = self._corpus.get_conf("ENCODING")
+        self.name = corpname
+
+    def __getattr__(self, attr):
+        return getattr(self._corpus, attr)
+
+    def __repr__(self):
+        name = self.name.encode("unicode-escape")
+        return "<Corpus {}>".format(name)
+
+    @staticmethod
+    def _simple_query(query):
+        query = re.sub(r'(["\*\+\-\.\\\[\]\(\)\{\}])', r'\\1', query)
+        cql = u""
+        for tok in query.split():
+            cql += u'[lemma="(?i){0}"|word="(?i){0}"]'.format(tok)
+        return cql
+
+    @staticmethod
+    def _normalize_cql(cql):
+        # make sure cql doesn't start with a "
+        cql = u" " + cql
+        cqlist = re.split(r'(?<!\\)"', cql)
+        cql = u""
+        for i, span in enumerate(cqlist):
+            # span outside quotes, normalize it
+            if i % 2 == 0:
+                cql += re.sub(r"\s+", "", span)
+            # span belongs inside quotes, leave it alone
+            else:
+                cql += u'"' + span + u'"'
+        return cql
+
+    def query(self, cql, shuffle=True):
+        """Run query on corpus.
+
+        :param cql: A CQL query string. If parsing fails, it is interpreted as
+        a simple query.
+
+        """
+        # see if the CQL is valid
+        try:
+            Concordance(self, cql)
+        # if the query fails to compile, then just interpret it as a list of
+        # lemmas/forms
+        except RuntimeError:
+            cql = self._simple_query(cql)
+        # normalize CQL to optimize caching
+        cql = self._normalize_cql(cql)
+        return self._query(cql, shuffle)
+
+    def check_cache(self, cql):
+        bytestring = (self.name + cql).encode("utf-8")
+        conc_hash = hashlib.md5(bytestring).hexdigest()
+        cache_path = os.path.join(app.config["CACHE_DIR"], conc_hash + ".conc")
+        if os.path.exists(cache_path):
+            return cache_path, True
+        else:
+            return cache_path, False
+
+    def _query(self, cql, shuffle):
+        cache_path, cache_exists = self.check_cache(cql)
+        if cache_exists:
+            log = u"Found cache file {}\n  for corpus {}\n  and query {}."
+            app.logger.debug(log.format(cache_path, self.name, cql))
+            # read and return cache
+            return CachedConcordance(cache_path, self, cql)
+        conc = Concordance(self, cql)
+        # this is fairly time-consuming for large concordances
+        conc.sync()
+        # and this even more
+        if shuffle:
+            conc.shuffle()
+        conc.save(cache_path, False, False, False)
+        return conc
+
+
+class Concordance(object):
+    """A wrapper for manatee concordances.
+
+    """
+    def __init__(self, corpus, cql, sample_size=0, result_size=-1):
+        self.corpus = corpus
+        self.cql = cql
+        self._conc = manatee.Concordance(corpus._corpus,
+                                         cql.encode(corpus.enc),
+                                         sample_size, result_size)
+
+    def __getattr__(self, attr):
+        return getattr(self._conc, attr)
+
+    def __repr__(self):
+        corpus = self.corpus.name.encode("unicode-escape")
+        query = self.cql.encode("unicode-escape")
+        return "<{} Concordance for {}>".format(corpus, query)
+
+    def kwic_lines(self, lctx, rctx, kwic_attrs, ctx_attrs, structs, meta, max_ctx):
+        lctx, rctx = str(lctx), str(rctx)
+        return manatee.KWICLines(self.corpus._corpus, self._conc.RS(True),
+                                 lctx, rctx, kwic_attrs, ctx_attrs, structs,
+                                 meta, max_ctx)
+
+
+class CachedConcordance(Concordance):
+
+    def __init__(self, cache_file, corpus, cql):
+        self.corpus = corpus
+        self.cql = cql
+        self._conc = manatee.Concordance(corpus._corpus,
+                                         cache_file)
+
+
+class QueryForm(Form):
+    corpora = app.config["CORPORA"]
+    corpus = SelectField(u"Corpus name", [validators.required()],
+                         choices=zip(corpora, corpora))
+    cql = TextAreaField(u"CQL query", [validators.required()])
+
+
+def freq_info(corpus, conc):
+    abs = conc.size()
+    ipm = abs / corpus.size() * 10**6
+    arf = conc.compute_ARF()
+    return locals()
+
+
+def as_unicode(str_tuple, enc):
+    if len(str_tuple) > 2 or not str_tuple[1].startswith("{"):
+        raise RuntimeError("Inspect ``str_tuple``.")
+    return str_tuple[0].decode(enc)
+
+
+def pager(conc, per_page, current):
+    prev = current - 1 if current > 1 else None
+    next = current + 1 if current * per_page < conc.size() else None
+    return locals()
+
+
+@app.route("/conc/", defaults=dict(corpus="", cql="", page=None),
+           methods=("GET", "POST"))
+@app.route("/conc/<corpus>/<cql>/<int:page>")
+def conc(corpus, cql, page):
+    form = QueryForm(corpus=corpus, cql=cql)
+    # GET only the query form
+    if corpus == "" and cql == "":
+        return render_template("conc.html", form=form, def_corp=app.config["DEFAULT_CORPUS"])
+    try:
+        corpus = Corpus(corpus)
+    except manatee.CorpInfoNotFound:
+        abort(404, "Invalid corpus name.")
+    conc = corpus.query(cql)
+    kwic_lines = conc.kwic_lines(-15, 15, "word", "word", "", "=doc.id", 0)
+    enc = corpus.enc
+    per_page = 50
+    kwic_lines.skip((page - 1) * per_page)
+    result = []
+    i = 0
+    while kwic_lines.nextline() and i < per_page:
+        meta = kwic_lines.get_refs().decode(enc)
+        left = as_unicode(kwic_lines.get_left(), enc)
+        kwic = as_unicode(kwic_lines.get_kwic(), enc)
+        right = as_unicode(kwic_lines.get_right(), enc)
+        result.append((meta, left, kwic, right))
+        i += 1
+    return render_template("conc.html", form=form, conc=result,
+                           freq=freq_info(corpus, conc), def_corp=corpus.name,
+                           pager=pager(conc, per_page, page))
+
+
+@app.route("/freq/<by>/<corpus>/<cql>")
+def freq(by, corpus, cql):
+    form = QueryForm(corpus=corpus, cql=cql)
+    how = "{}/ 0<0".format(by)
+    words = manatee.StrVector()
+    freqs = manatee.NumVector()
+    norms = manatee.NumVector()
+    try:
+        corpus = Corpus(corpus)
+    except manatee.CorpInfoNotFound:
+        abort(404, "Invalid corpus name.")
+    conc = corpus.query(cql)
+    corpus.freq_dist(conc.RS(), how, 0, words, freqs, norms)
+    words = map(lambda x: x.decode(corpus.enc), words)
+    return render_template("freq.html", form=form, rows=zip(words, freqs))
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=1993)

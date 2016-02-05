@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <title>Marlin</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/marlin.css') }}">
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/vendor/turbolinks.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/marlin.js') }}"></script>
+</head>
+<body>
+  {{ form.hidden_tag() }}
+  <nav class="navbar navbar-collapse navbar-inverse navbar-fixed-top">
+    <div class="container-large">
+      <div class="search-container">
+        <div class="navbar-header">
+          <img id="logo" alt="Marlin logo" src="{{ url_for('static', filename='img/marlin.png') }}">
+          <a class="navbar-brand" href="#">Marlin</a>
+        </div>
+        <form class="navbar-form">
+          <div class="search-left">
+            <button onclick="search()" type="button" class="btn btn-md btn-success search-btn">Search for</button>
+          </div>
+          <div class="search-right">
+            <label for="corpus" class="navbar-text">in</label>
+            <!-- I thought setting the default attribute on the SelectField would -->
+            <!-- take care of selecting the right corpus automatically, but can't get -->
+            <!-- it to work -->
+            <select id="corpus" class="form-control" name="corpus" placeholder="{{ form.corpus.label.text }}">
+              {% for choice in form.corpus.choices %}
+              <option value="{{ choice[0] }}"
+                      {% if choice[0] == def_corp %}
+                      selected="selected"
+                      {% endif %}>
+                {{ choice[1] }}
+              </option>
+              {% endfor %}
+            </select>
+            <button type="button" class="navbar-toggle" data-toggle="offcanvas" data-target="#option-menu" data-canvas="body">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+          <div class="search-stretch">
+            {{ form.cql(rows=1, autofocus=True, placeholder=form.cql.label.text, class_="form-control") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </nav>
+  <div id="option-menu" class="navmenu navmenu-default navmenu-fixed-right offcanvas">
+    <span class="navmenu-brand">Options</span>
+    <ul class="nav navmenu-nav">
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Link</a></li>
+      <li><a href="#">Link</a></li>
+    </ul>
+  </div>
+  {% block content %}
+  {% endblock %}
+</body>

@@ -1,0 +1,81 @@
+body {
+  padding-top: 63px;
+  background-image: url("/static/img/swirl_pattern.png");
+  background-repeat: repeat;
+}
+
+.navbar {
+  -webkit-box-shadow: 0 8px 6px -6px #999;
+  -moz-box-shadow: 0 8px 6px -6px #999;
+  box-shadow: 0 8px 6px -6px #999;
+}
+
+/* clear floats in panel-heading */
+.panel-heading {
+  overflow: hidden;
+}
+
+.align-left {
+  float: left;
+}
+
+.align-right {
+  float: right;
+}
+
+textarea {
+  min-width: 100%;
+  font-family: monospace;
+  resize: vertical;
+}
+
+.panel-heading {
+  padding-bottom: 0;
+}
+
+#logo {
+  height: 50px;
+  float: left;
+  position: relative;
+  top: -5px;
+}
+
+.search-container {
+  width: 100%;
+}
+
+.search-left {
+  float: left;
+}
+
+.search-right {
+  float: right;
+}
+
+.search-stretch {
+  /* this is the important trick that makes the content area of the div fill up all */
+  /* available space but not more, so that width: 100% doesn't expand so much as to */
+  /* create a whole new line. it has sth to do with clearing floats. */
+  overflow: hidden;
+}
+
+.search-btn {
+  margin-right: 15px;
+}
+
+#hint {
+  padding-left: 1em;
+  overflow: hidden;
+}
+
+.container-large {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.navbar-toggle {
+  display: block;
+  margin-top: 0;
+  margin-right: 0;
+  margin-left: 15px;
+}

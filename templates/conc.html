@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+{% if conc is defined %}
+<div class="container-large" role="main">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <p class="align-left">
+        {% include "pager.html" %}
+      </p>
+      <p class="align-right">
+        <span class="label label-default">absolute frequency</span>
+        {{ "{:,d}".format(freq.abs) }}
+        <span class="label label-primary">i.p.m.</span>
+        {{ "{:0,.2f}".format(freq.ipm) }}
+        <span class="label label-success">ARF</span>
+        {{ "{:0,.2f}".format(freq.arf) }}
+      </p>
+      <p id="hint">
+        <small>Press <kbd>Ctrl+Enter</kbd> with cursor anywhere in page to search.</small>
+      </p>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="table table-hover table-condensed text-nowrap">
+        {% for meta, left, kwic, right in conc %}
+        <tr>
+          <td class="text-primary">{{ meta }}</td>
+          <td align="right">{{ left }}</td>
+          <td class="text-danger" align="center">{{ kwic }}</td>
+          <td>{{ right }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="panel-footer">
+      {% include "pager.html" %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
