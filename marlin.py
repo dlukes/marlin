@@ -235,14 +235,12 @@ def pager(conc, per_page, current):
     return locals()
 
 
-@app.route("/conc/", defaults=dict(corpus="", cql="", page=None),
-           methods=("GET", "POST"))
+@app.route("/")
+def index():
+    return render_template("conc.html", forms=create_forms(locals()))
+
+
 @app.route("/conc/<corpus>/<cql>/<int:page>")
-def conc(corpus, cql, page):
-    form = QueryForm(corpus=corpus, cql=cql)
-    # GET only the query form
-    if corpus == "" and cql == "":
-        return render_template("conc.html", form=form, def_corp=app.config["DEFAULT_CORPUS"])
 def conc(corpus, cql , page):
     forms = create_forms(locals())
     try:
