@@ -18,7 +18,13 @@ def test_normalize_cql():
     assert test == u'[lemma="kočka"]' and type(test) is unicode
 
 
-def test_normalize_cql():
+def test_simple_query():
     squery = marlin.Corpus._simple_query
     test = squery(u"kočka")
     assert test == u'[lemma="(?i)kočka"|word="(?i)kočka"]' and type(test) is unicode
+
+
+def test_getting_num_of_positions_per_value_of_structural_attribute():
+    corp = marlin.Corpus("syn2010")
+    tpa = corp.toks_per_attrval("opus.txtype")
+    assert tpa["IMA"] == 347012
