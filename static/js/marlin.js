@@ -1,4 +1,4 @@
-function search() {
+function makeConc() {
   var corpus = $('#corpus').val();
   var cql = $('#cql').val();
   var url = '/conc/' +
@@ -11,7 +11,7 @@ $(document).ready(function() {
   $(document).keydown(function(e) {
     if (e.ctrlKey && e.keyCode == 13) {
       e.preventDefault();
-      search();
+      makeConc();
     }
   });
 
