@@ -15,11 +15,8 @@ $(document).ready(function() {
     }
   });
 
-  $("form input").keydown(function(e) {
-    if (e.keyCode == 13) {
-      e.preventDefault();
-      search();
-    }
+  $(document).submit(function(e) {
+    e.preventDefault();
   });
 
   // a crude but simple way of checking whether we need to adjust the body
