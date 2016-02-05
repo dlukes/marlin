@@ -12,7 +12,7 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/marlin.js') }}"></script>
 </head>
 <body>
-  {{ form.hidden_tag() }}
+  {{ forms.query.hidden_tag() }}
   <nav class="navbar navbar-collapse navbar-inverse navbar-fixed-top">
     <div class="container-large">
       <div class="search-container">
@@ -22,17 +22,17 @@
         </div>
         <form class="navbar-form">
           <div class="search-left">
-            <button onclick="search()" type="button" class="btn btn-md btn-success search-btn">Search for</button>
+            <button onclick="makeConc()" type="submit" class="btn btn-md btn-success search-btn">Search for</button>
           </div>
           <div class="search-right">
             <label for="corpus" class="navbar-text">in</label>
             <!-- I thought setting the default attribute on the SelectField would -->
             <!-- take care of selecting the right corpus automatically, but can't get -->
             <!-- it to work -->
-            <select id="corpus" class="form-control" name="corpus" placeholder="{{ form.corpus.label.text }}">
-              {% for choice in form.corpus.choices %}
+            <select id="corpus" class="form-control" name="corpus" placeholder="{{ forms.query.corpus.label.text }}">
+              {% for choice in forms.query.corpus.choices %}
               <option value="{{ choice[0] }}"
-                      {% if choice[0] == def_corp %}
+                      {% if choice[0] == forms.def_corp %}
                       selected="selected"
                       {% endif %}>
                 {{ choice[1] }}
@@ -46,7 +46,7 @@
             </button>
           </div>
           <div class="search-stretch">
-            {{ form.cql(rows=1, autofocus=True, placeholder=form.cql.label.text, class_="form-control") }}
+            {{ forms.query.cql(rows=1, autofocus=True, placeholder=forms.query.cql.label.text, class_="form-control") }}
           </div>
         </form>
       </div>
