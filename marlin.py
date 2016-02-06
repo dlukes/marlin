@@ -263,7 +263,8 @@ def conc(corpus, cql, page):
         i += 1
     return render_template("conc.html", forms=forms, conc=result,
                            freq=freq_info(corpus, conc), def_corp=corpus.name,
-                           pager=pager(conc, per_page, page))
+                           pager=pager(conc, per_page, page),
+                           real_query=conc.cql)
 
 
 def freq_dist_ipms(items, freqs, norms, corpsize):

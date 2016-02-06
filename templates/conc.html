@@ -8,6 +8,12 @@
         {% include "pager.html" %}
       </div>
       <div class="align-right">
+        <a class="btn btn-xs btn-warning" target="_blank"
+           href="https://kontext.korpus.cz/first?shuffle=1&reload=&corpname=omezeni%2F{{ forms.query.corpus.data | urlencode }}&queryselector=cqlrow&iquery=&phrase=&word=&char=&cql={{ real_query | urlencode }}&default_attr=word&fc_lemword_window_type=both&fc_lemword_wsize=5&fc_lemword=&fc_lemword_type=all">
+          Open in KonText <span class="glyphicon glyphicon-new-window"></span>
+        </a>
+      </div>
+      <div class="align-right">
         <span class="label label-default">absolute frequency</span>
         {{ "{:,d}".format(freq.abs) }}
         <span class="label label-primary">i.p.m.</span>
