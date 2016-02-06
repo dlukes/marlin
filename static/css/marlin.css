@@ -84,3 +84,10 @@ textarea {
 #freq-dist th:nth-child(5) {
   width: 100px;
 }
+
+#freq-dist th:nth-child(2),
+#freq-dist th:nth-child(4),
+#freq-dist td:nth-child(2),
+#freq-dist td:nth-child(4) {
+  text-align: right;
+}
