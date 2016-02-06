@@ -34,3 +34,18 @@ Name
 It's just a lousy pun on manatee -- manatees are sea mammals, marlins are one of
 the fastest fish in the world. But you can make it stand for a backronym of
 Manatee Access Reimplemented by a LINguist if you'd like :)
+
+=======
+Credits
+=======
+
+Icons are by `Glyphicons <http://glyphicons.com/>`_.
+
+=======
+License
+=======
+
+Copyright © 2016 `ÚČNK <http://korpus.cz>`_/David Lukeš
+
+Distributed under the `GNU General Public License v3
+<http://www.gnu.org/licenses/gpl-3.0.en.html>`_.
