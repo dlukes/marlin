@@ -207,9 +207,7 @@ def create_forms(kwargs):
     forms = {}
     forms["query"] = QueryForm(
         corpus=kwargs.get("corpus"), cql=kwargs.get("cql"))
-    app.logger.debug(kwargs)
     forms["def_corp"] = kwargs.get("corpus", app.config["DEFAULT_CORPUS"])
-    app.logger.debug(forms["def_corp"])
     forms["freq_dist"] = FreqDistForm(
         by=kwargs.get("by", "word"), offset=kwargs.get("offset", 0),
         minfreq=kwargs.get("minfreq", 0))
