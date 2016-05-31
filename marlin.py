@@ -82,7 +82,14 @@ class Corpus(object):
         for i, span in enumerate(cqlist):
             # span outside quotes, normalize it
             if i % 2 == 0:
-                cql += re.sub(r"\s+", "", span)
+                # split again at spaces between two word characters, because we
+                # need to keep those
+                span_list = re.split(r'(?<=\w)\s+(?=\w)', span)
+                for j in range(len(span_list)):
+                    # kill all other whitespace
+                    span_list[j] = re.sub(r"\s+", "", span_list[j])
+                # restore (normalized) whitespace between word chars
+                cql += " ".join(span_list)
             # span belongs inside quotes, leave it alone
             else:
                 cql += u'"' + span + u'"'
@@ -191,7 +198,8 @@ class QueryForm(Form):
     # spent
     corpus = SelectField(u"Corpus name", [validators.required()],
                          choices=zip(corpora, corpora))
-    cql = TextAreaField(u"CQL query", [validators.required()])
+    cql = TextAreaField(u"Simple query (bare words / lemmas) or CQL",
+                        [validators.required()])
 
 
 class FreqDistForm(Form):
@@ -238,7 +246,9 @@ def index():
     return render_template("conc.html", forms=create_forms(locals()))
 
 
-@app.route("/conc/<corpus>/<cql>/<int:page>")
+# the cql parameter must use a path converter because it might contain slashes
+# (even though they'll be encoded)
+@app.route("/conc/<corpus>/<path:cql>/<int:page>")
 def conc(corpus, cql, page):
     forms = create_forms(locals())
     try:
@@ -303,4 +313,4 @@ def freq(corpus, cql, by, offset, minfreq):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=1993)
+    app.run(debug=True, host="::", port=1993)
