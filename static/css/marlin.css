@@ -23,10 +23,14 @@ body {
   float: right;
 }
 
-textarea {
+/* the query textarea */
+#cql {
   min-width: 100%;
   font-family: monospace;
   resize: vertical;
+  /* this is the normal value for .form-control, but it's overridden in */
+  /* Firefox (not in Chrome) for textareas */
+  height: 34px;
 }
 
 #logo {
