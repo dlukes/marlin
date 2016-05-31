@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# run with pytest
 
 import marlin
 
