@@ -2,7 +2,6 @@
 from __future__ import division
 
 import os
-import sys
 import hashlib
 from itertools import izip
 
@@ -13,8 +12,6 @@ from wtforms import IntegerField, SelectField, StringField, TextAreaField
 import wtforms.validators as validators
 
 import re
-# this is valid for the trost server
-sys.path.append("/opt/manatee/2.107.1/lib/python2.7/site-packages/")
 import manatee
 
 app = Flask("marlin")
@@ -22,11 +19,14 @@ app = Flask("marlin")
 # CONFIG
 app.config.update(
     SECRET_KEY="a random string",
-    DEFAULT_CORPUS="syn2015",
+    DEFAULT_CORPUS="test",
     CACHE_DIR=os.path.abspath(".cache"),
-    MANATEE_REGISTRY="/home/manatee/registry")
+    MANATEE_REGISTRY="/corpora/registry",
+)
 app = turbolinks(app)
 os.environ["MANATEE_REGISTRY"] = app.config["MANATEE_REGISTRY"]
+if not os.path.isdir(app.config["CACHE_DIR"]):
+    os.makedirs(app.config["CACHE_DIR"])
 
 
 def find_corpora(registry):
@@ -39,9 +39,8 @@ def find_corpora(registry):
                     prop, _ = re.split(r"\s+", line, 1)
                 # split unsuccessful
                 except ValueError:
-                    next
+                    continue
             if prop == "NAME":
-                # corpora.add(val.strip('"'))
                 corpora.add(name)
     return sorted(corpora)
 
@@ -53,6 +52,7 @@ class Corpus(object):
     """A wrapper for manatee corpora.
 
     """
+
     def __init__(self, corpname):
         self._corpus = manatee.Corpus(corpname)
         self.enc = self._corpus.get_conf("ENCODING")
@@ -67,7 +67,7 @@ class Corpus(object):
 
     @staticmethod
     def _simple_query(query):
-        query = re.sub(r'(["\*\+\-\.\\\[\]\(\)\{\}])', r'\\1', query)
+        query = re.sub(r'(["\*\+\-\.\\\[\]\(\)\{\}])', r"\\1", query)
         cql = u""
         for tok in query.split():
             cql += u'[lemma="(?i){0}"|word="(?i){0}"]'.format(tok)
@@ -84,7 +84,7 @@ class Corpus(object):
             if i % 2 == 0:
                 # split again at spaces between two word characters, because we
                 # need to keep those
-                span_list = re.split(r'(?<=\w)\s+(?=\w)', span)
+                span_list = re.split(r"(?<=\w)\s+(?=\w)", span)
                 for j in range(len(span_list)):
                     # kill all other whitespace
                     span_list[j] = re.sub(r"\s+", "", span_list[j])
@@ -143,7 +143,8 @@ class Corpus(object):
         struct = self.get_struct(struct)
         attr = struct.get_attr(attr)
         struct_len_at_pos = {
-            struct.beg(i): struct.end(i) - struct.beg(i) for i in range(struct.size())}
+            struct.beg(i): struct.end(i) - struct.beg(i) for i in range(struct.size())
+        }
         ans = {}
         for attrid in range(attr.id_range()):
             attrval = attr.id2str(attrid)
@@ -160,12 +161,13 @@ class Concordance(object):
     """A wrapper for manatee concordances.
 
     """
+
     def __init__(self, corpus, cql, sample_size=0, result_size=-1):
         self.corpus = corpus
         self.cql = cql
-        self._conc = manatee.Concordance(corpus._corpus,
-                                         cql.encode(corpus.enc),
-                                         sample_size, result_size)
+        self._conc = manatee.Concordance(
+            corpus._corpus, cql.encode(corpus.enc), sample_size, result_size
+        )
 
     def __getattr__(self, attr):
         return getattr(self._conc, attr)
@@ -177,18 +179,24 @@ class Concordance(object):
 
     def kwic_lines(self, lctx, rctx, kwic_attrs, ctx_attrs, structs, meta, max_ctx):
         lctx, rctx = str(lctx), str(rctx)
-        return manatee.KWICLines(self.corpus._corpus, self._conc.RS(True),
-                                 lctx, rctx, kwic_attrs, ctx_attrs, structs,
-                                 meta, max_ctx)
+        return manatee.KWICLines(
+            self.corpus._corpus,
+            self._conc.RS(True),
+            lctx,
+            rctx,
+            kwic_attrs,
+            ctx_attrs,
+            structs,
+            meta,
+            max_ctx,
+        )
 
 
 class CachedConcordance(Concordance):
-
     def __init__(self, cache_file, corpus, cql):
         self.corpus = corpus
         self.cql = cql
-        self._conc = manatee.Concordance(corpus._corpus,
-                                         cache_file)
+        self._conc = manatee.Concordance(corpus._corpus, cache_file)
 
 
 class QueryForm(Form):
@@ -196,10 +204,12 @@ class QueryForm(Form):
     # watch out, choices need to be zipped, not izipped, because they're
     # consumed each time a form is created, and a generator remains empty once
     # spent
-    corpus = SelectField(u"Corpus name", [validators.required()],
-                         choices=zip(corpora, corpora))
-    cql = TextAreaField(u"Simple query (bare words / lemmas) or CQL",
-                        [validators.required()])
+    corpus = SelectField(
+        u"Corpus name", [validators.required()], choices=zip(corpora, corpora)
+    )
+    cql = TextAreaField(
+        u"Simple query (bare words / lemmas) or CQL", [validators.required()]
+    )
 
 
 class FreqDistForm(Form):
@@ -213,12 +223,13 @@ class FreqDistForm(Form):
 
 def create_forms(kwargs):
     forms = {}
-    forms["query"] = QueryForm(
-        corpus=kwargs.get("corpus"), cql=kwargs.get("cql"))
+    forms["query"] = QueryForm(corpus=kwargs.get("corpus"), cql=kwargs.get("cql"))
     forms["def_corp"] = kwargs.get("corpus", app.config["DEFAULT_CORPUS"])
     forms["freq_dist"] = FreqDistForm(
-        by=kwargs.get("by", "word"), offset=kwargs.get("offset", 0),
-        minfreq=kwargs.get("minfreq", 0))
+        by=kwargs.get("by", "word"),
+        offset=kwargs.get("offset", 0),
+        minfreq=kwargs.get("minfreq", 0),
+    )
     return forms
 
 
@@ -269,10 +280,15 @@ def conc(corpus, cql, page):
         right = as_unicode(kwic_lines.get_right(), enc)
         result.append((meta, left, kwic, right))
         i += 1
-    return render_template("conc.html", forms=forms, conc=result,
-                           freq=freq_info(corpus, conc), def_corp=corpus.name,
-                           pager=pager(conc, per_page, page),
-                           real_query=conc.cql)
+    return render_template(
+        "conc.html",
+        forms=forms,
+        conc=result,
+        freq=freq_info(corpus, conc),
+        def_corp=corpus.name,
+        pager=pager(conc, per_page, page),
+        real_query=conc.cql,
+    )
 
 
 def freq_dist_ipms(items, freqs, norms, corpsize):
@@ -281,6 +297,7 @@ def freq_dist_ipms(items, freqs, norms, corpsize):
             return freq / norms[item] * 1e6
         else:
             return freq / corpsize * 1e6
+
     return [_ipm(item, freq) for (item, freq) in izip(items, freqs)]
 
 
@@ -307,9 +324,14 @@ def freq(corpus, cql, by, offset, minfreq):
     # if the freq dist is long, take only the first 10000 items (the rest are
     # useless anyway); TODO: notify user of this
     rows = rows[:1e4] if len(rows) > 1e4 else rows
-    return render_template("freq.html", forms=forms, def_corp=corpus.name,
-                           rows=rows, abs_max=max(freqs),
-                           ipm_max=max(ipms))
+    return render_template(
+        "freq.html",
+        forms=forms,
+        def_corp=corpus.name,
+        rows=rows,
+        abs_max=max(freqs),
+        ipm_max=max(ipms),
+    )
 
 
 if __name__ == "__main__":
