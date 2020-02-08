@@ -9,13 +9,24 @@ An alternative concordancer front end to the `Manatee
 Installation
 ============
 
-This is all highly experimental at the moment, so there's just a dev setup. Just
-clone the repository, create a virtualenv (or not), then ``pip install -r
-requirements.txt`` and ``python marlin.py``. You'll probably need to update some
-config values for your own use case (the location of your ``MANATEE_REGISTRY``,
-the path to the Python API module), but just follow the tracebacks.
+To be frank, this is really an abandoned experiment with very bare
+features, kind of wobbly in places. I've come to know Python much better
+since then. Still, for the purpose of nostalgic reminiscing, I've put
+together a ``Dockerfile``, so that I can run it from time to time :) So
+if you want to try it out, install Docker for your platform, and then:
 
-Then visit `<http://localhost:1993>`_.
+.. code-block:: sh
+
+   git clone https://github.com/dlukes/marlin.git
+   cd marlin
+   # at this point, put a file named `vertikala` inside the directory,
+   # containing your corpus in the CWB/SketchEngine vertical format, and
+   # a file named `test`, containing the SketchEngine configuration file
+   # for the corpus
+   docker build -t marlin .
+   docker run -p 1993:1993 marlin
+
+Then visit `<http://localhost:1993>`_ in your favorite browser.
 
 Tested on Python 2.7+.
 
